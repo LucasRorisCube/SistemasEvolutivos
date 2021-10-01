@@ -166,22 +166,36 @@ void roleta(chromosome* individuals){
         tempPopulationSorted[i] = individuals[i];
     }
 
-    bubble_sort_mod(tempPopulationSorted);
+    //bubble_sort_mod(tempPopulationSorted);
+
+    int individualLowerFitness = -1;
+    float loweFitness = INFINITY;
+    for(int i = 0; i < numberPopulation; i++){
+        if(function(tempPopulationSorted[i]) < loweFitness){
+            loweFitness = function(tempPopulationSorted[i]);
+            individualLowerFitness = i;
+        }
+    }
 
     int individualBiggerFitness = getIndividualBiggerFitness();
 
     float sumFitness = 0;
     float* IndividualFitness = (float*) malloc(sizeof(float)*numberPopulation);
     for(int i = numberPopulation-1 ; i >= 0 ; i--){
-        IndividualFitness[i] = function(tempPopulationSorted[i]) - function(tempPopulationSorted[0]);
+        if( i == individualLowerFitness){
+            continue;
+        }
+        IndividualFitness[i] = function(tempPopulationSorted[i]) - function(tempPopulationSorted[individualLowerFitness]);
         sumFitness += IndividualFitness[i];
         printf("i = %d, fitness = %f\n",i,IndividualFitness[i]);
     }
+    IndividualFitness[individualLowerFitness] = 0;
+
 
     int sortedNumber;
     for (int i = 0 ; i < numberPopulation ; i++){
 
-        if(i == numberPopulation-1){
+        if(i == individualBiggerFitness){
             individuals[i] = tempPopulationSorted[i];
             
             continue;

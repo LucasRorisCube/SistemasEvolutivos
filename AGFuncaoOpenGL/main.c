@@ -116,6 +116,13 @@ void Keyboard(unsigned char key, int x, int y){
     
 }
 
+void timer(){
+
+    Keyboard('e',0,0);
+
+    glutTimerFunc(1000/1, timer, 0);
+}
+
 int main(int argc, char *argv[]){
 
     srand(time(NULL));
@@ -136,6 +143,8 @@ int main(int argc, char *argv[]){
     setupDraw(MIN_X,MAX_X,MIN_Y,MAX_Y,PRECISION);
 
     Draw();
+
+    glutTimerFunc(0, timer, 0);
 
     glutMainLoop();
 
