@@ -20,6 +20,7 @@ int getIndividualBiggerFitness();
 void doubleTaxMutation();
 void halfTaxMutation();
 void setEvolveMode(int new_mode);
+void resetTaxMutation();
 
 int getGeration();
 float getTaxMutation();

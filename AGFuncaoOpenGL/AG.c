@@ -14,6 +14,7 @@ int maxRange_x;
 int numberPopulation;
 
 float TaxMutation;
+float defaultTaxMutation;
 
 int mode;
 
@@ -23,15 +24,25 @@ char* evolutionMode;
 
 chromosome* individuals = NULL;
 
+chromosome Bestindividuals[10];
+
+float modFloat(float x){
+    return (x<0)?-x:x;
+}
+
 void setupAG(int new_min_x, int new_max_x, int new_numberPopulation, float new_TaxMutation){
     minRange_x = new_min_x;
     maxRange_x = new_max_x;
     numberPopulation = new_numberPopulation;
     TaxMutation = new_TaxMutation;
+    defaultTaxMutation = new_TaxMutation;
     evolutionMode = (char*)malloc(sizeof(char)*20);
     strcpy(evolutionMode,"Elitismo");
     mode = 1;
     geration = 0;
+    for(int i = 0; i < 10 ; i++){
+        Bestindividuals[i].x = 0;
+    }
 }
 
 void startPopulation(){
@@ -77,9 +88,9 @@ void elitismo(chromosome* individuals){
         // CrossOver with arithmetic average
         tempPopulation[i].x = (individuals[i].x + individuals[individualBiggerFitness].x)/2.0;
         if(rand()%2){
-            tempPopulation[i].x = tempPopulation[i].x + TaxMutation;
+            tempPopulation[i].x = tempPopulation[i].x + TaxMutation*(maxRange_x-minRange_x);
         } else {
-            tempPopulation[i].x = tempPopulation[i].x - TaxMutation;
+            tempPopulation[i].x = tempPopulation[i].x - TaxMutation*(maxRange_x-minRange_x);
         }
         
     }
@@ -89,6 +100,21 @@ void elitismo(chromosome* individuals){
     }
 
     free(tempPopulation);
+}
+
+void bubble_sort_mod(chromosome* individuals){
+    for(int i = 0; i < numberPopulation-numberPopulation/2; i++){
+        int ordenate = 1;
+        for(int j = 0 ; j < numberPopulation - i; j++){
+            if(function(individuals[j]) > function(individuals[j+1])){
+                chromosome temp = individuals[j];
+                individuals[j] = individuals[j+1];
+                individuals[j+1] = temp;
+                ordenate = 0;
+            }
+        }
+        if(ordenate) break;
+    }
 }
 
 void torneioDe2(chromosome* individuals){
@@ -136,27 +162,17 @@ void torneioDe2(chromosome* individuals){
         }
     }
 
-    for(int i = 0 ; i < numberPopulation ; i++){
-        individuals[i] = tempPopulation[i];
+    bubble_sort_mod(tempPopulation);
+    bubble_sort_mod(individuals);
+
+    for(int i = 0 ; i < numberPopulation*0.01 ; i++){
+        individuals[i] = tempPopulation[numberPopulation-i];
     }
 
     free(tempPopulation);
 }
 
-void bubble_sort_mod(chromosome* individuals){
-    for(int i = 0; i < numberPopulation; i++){
-        int ordenate = 1;
-        for(int j = 0 ; j < numberPopulation - i; j++){
-            if(function(individuals[j]) > function(individuals[j+1])){
-                chromosome temp = individuals[j];
-                individuals[j] = individuals[j+1];
-                individuals[j+1] = temp;
-                ordenate = 0;
-            }
-        }
-        if(ordenate) break;
-    }
-}
+
 
 void roleta(chromosome* individuals){
     chromosome* tempPopulation = (chromosome*)malloc(sizeof(chromosome)*numberPopulation);
@@ -166,9 +182,10 @@ void roleta(chromosome* individuals){
         tempPopulationSorted[i] = individuals[i];
     }
 
-    //bubble_sort_mod(tempPopulationSorted);
+    bubble_sort_mod(tempPopulationSorted);
 
     int individualLowerFitness = -1;
+    
     float loweFitness = INFINITY;
     for(int i = 0; i < numberPopulation; i++){
         if(function(tempPopulationSorted[i]) < loweFitness){
@@ -176,9 +193,7 @@ void roleta(chromosome* individuals){
             individualLowerFitness = i;
         }
     }
-
-    int individualBiggerFitness = getIndividualBiggerFitness();
-
+    
     float sumFitness = 0;
     float* IndividualFitness = (float*) malloc(sizeof(float)*numberPopulation);
     for(int i = numberPopulation-1 ; i >= 0 ; i--){
@@ -187,17 +202,18 @@ void roleta(chromosome* individuals){
         }
         IndividualFitness[i] = function(tempPopulationSorted[i]) - function(tempPopulationSorted[individualLowerFitness]);
         sumFitness += IndividualFitness[i];
-        printf("i = %d, fitness = %f\n",i,IndividualFitness[i]);
+        //printf("i = %d, fitness = %f\n",i,IndividualFitness[i]);
     }
     IndividualFitness[individualLowerFitness] = 0;
 
-
+    int individualBiggerFitness = getIndividualBiggerFitness();
+    printf("best = %d\n",individualBiggerFitness);
     int sortedNumber;
     for (int i = 0 ; i < numberPopulation ; i++){
 
         if(i == individualBiggerFitness){
-            individuals[i] = tempPopulationSorted[i];
-            
+            //individuals[i] = tempPopulationSorted[i];
+            printf("%d\n",i);
             continue;
         }
 
@@ -299,6 +315,28 @@ void evolve(){
     default:
         break;
     }
+
+    chromosome temp;
+    for(int i = 0; i < 9 ; i++){
+        temp = Bestindividuals[i];
+        Bestindividuals[i] = Bestindividuals[i+1];
+        Bestindividuals[i+1] = temp;
+    }
+    Bestindividuals[0] = individuals[getIndividualBiggerFitness()];
+
+    if(modFloat(Bestindividuals[4].x - Bestindividuals[0].x) < 0.001){
+        TaxMutation *= 1.2;
+    } else {
+        TaxMutation = defaultTaxMutation;
+    }
+
+    if(TaxMutation > 10){
+        TaxMutation = defaultTaxMutation;
+    }
+}
+
+void resetTaxMutation(){
+    TaxMutation = defaultTaxMutation;
 }
 
 void doubleTaxMutation(){

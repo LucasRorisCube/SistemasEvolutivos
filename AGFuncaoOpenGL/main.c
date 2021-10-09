@@ -18,9 +18,11 @@
 #define PRECISION 0.05
 
 #define POPULATION 20
-#define TAX_MUTATION 0.2
+#define TAX_MUTATION 0.002
 
 int showInformations = 1;
+
+int automaticEvolve = 0;
 
 float function(chromosome individual){
     float res = -1;
@@ -73,6 +75,7 @@ void Keyboard(unsigned char key, int x, int y){
     {
     case 'r':
         startPopulation();
+        resetTaxMutation();
         break;
     case 'e':
         evolve();
@@ -84,11 +87,11 @@ void Keyboard(unsigned char key, int x, int y){
         halfTaxMutation();
         break;
     case 'c':
-        increasePopulation(5);
+        increasePopulation(10);
         startPopulation();
         break;
     case 'v':
-        decreasePopulation(5);
+        decreasePopulation(10);
         startPopulation();
         break;
     case 'h':
@@ -96,6 +99,13 @@ void Keyboard(unsigned char key, int x, int y){
             showInformations = 0;
         } else {
             showInformations = 1;
+        }
+        break;
+    case 'a':
+        if(automaticEvolve){
+            automaticEvolve = 0;
+        } else {
+            automaticEvolve = 1;
         }
         break;
     case '1':
@@ -118,7 +128,9 @@ void Keyboard(unsigned char key, int x, int y){
 
 void timer(){
 
-    Keyboard('e',0,0);
+    if(automaticEvolve){
+        Keyboard('e',0,0);
+    }
 
     glutTimerFunc(1000/1, timer, 0);
 }
